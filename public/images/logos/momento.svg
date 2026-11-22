@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
+  <rect width="300" height="300" fill="#262626"/>
+  <g fill="#F2EFE4" font-family="Arial, Helvetica, sans-serif" font-weight="900" text-anchor="middle">
+    <text x="150" y="175" font-size="62" letter-spacing="-3">MOMENTO</text>
+  </g>
+  <!-- red swoosh -->
+  <path d="M92 60 C 130 150, 100 120, 150 158" fill="none" stroke="#C8102E" stroke-width="7" stroke-linecap="round"/>
+  <!-- red plane -->
+  <g fill="#C8102E" transform="translate(150,72) rotate(35)">
+    <path d="M0,-26 L5,-6 L26,6 L26,12 L5,7 L2,20 L10,26 L10,30 L0,27 L-10,30 L-10,26 L-2,20 L-5,7 L-26,12 L-26,6 L-5,-6 Z"/>
+  </g>
+  <text x="150" y="212" fill="#F2EFE4" font-family="Arial, Helvetica, sans-serif" font-size="15" letter-spacing="6" text-anchor="middle">MAKE YOUR</text>
+  <text x="150" y="234" fill="#F2EFE4" font-family="Arial, Helvetica, sans-serif" font-size="15" letter-spacing="6" text-anchor="middle">MOMENT</text>
+</svg>
