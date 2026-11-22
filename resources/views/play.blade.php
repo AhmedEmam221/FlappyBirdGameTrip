@@ -18,7 +18,7 @@
 
             <!-- In-game score -->
             <div style="position:absolute; top:14px; left:0; right:0; pointer-events:none;">
-                <div class="text-4xl font-extrabold" style="color:#fff;" id="current-score">0</div>
+                <div class="text-4xl font-extrabold" style="color:#000;" id="current-score">0</div>
             </div>
 
             <!-- Start screen -->
@@ -111,7 +111,10 @@
     'use strict';
 
     // ---- Config ----
-    var GRAVITY = 0.55, FLAP = -10.5, PIPE_SPEED = 3.0, PIPE_GAP = 180, PIPE_WIDTH = 64;
+    // Movement is frame-rate independent (delta-time based) so the game runs
+    // at the same speed on high-FPS desktops and lower-FPS mobile devices.
+    var GRAVITY = 0.55, FLAP = -10.5, PIPE_SPEED = 3.2, PIPE_GAP = 180, PIPE_WIDTH = 64;
+    var PIPE_INTERVAL = 78; // frames @60fps between pipes (time-based via tick)
     var GROUND_Y = 490;
 
     // ---- DOM ----
@@ -153,6 +156,8 @@
     var sessionUuid = '', sessionToken = '', rafId = null;
     var running = false, paused = false, over = false, score = 0, tick = 0, lastPipe = 0;
     var lastGapCenter = 0;
+    var pipeCount = 0;      // monotonic pipe counter for odd/even logo assignment
+    var lastTime = 0;       // previous frame timestamp (delta-time)
     var bird, pipes;
 
     // ---- Session ----
@@ -179,6 +184,7 @@
         bird = { x: 90, y: canvas.height / 2, w: 30, h: 22, v: 0, rot: 0 };
         pipes = [];
         score = 0; tick = 0; lastPipe = 0; over = false; paused = false;
+        pipeCount = 0; lastTime = 0;
         // Start the first gap near the middle of the playable area
         lastGapCenter = GROUND_Y / 2;
         scoreEl.textContent = '0';
@@ -200,21 +206,28 @@
         bird.v = FLAP;
     }
 
-    function loop() {
+    function loop(time) {
         if (!running) return;
-        if (paused) { rafId = requestAnimationFrame(loop); return; }
+        if (paused) { lastTime = time || 0; rafId = requestAnimationFrame(loop); return; }
 
-        tick++;
+        // Delta time in "60fps frames". Clamp to avoid big jumps after tab switches.
+        var dt = lastTime ? (time - lastTime) : 16.667;
+        lastTime = time;
+        if (!isFinite(dt) || dt <= 0) dt = 16.667;
+        if (dt > 50) dt = 50;
+        var f = dt / 16.667;
 
-        // Bird physics
-        bird.v += GRAVITY;
-        bird.y += bird.v;
+        tick += f;
+
+        // Bird physics (scaled by delta time)
+        bird.v += GRAVITY * f;
+        bird.y += bird.v * f;
         bird.rot = Math.max(-25, Math.min(90, bird.v * 4));
 
         // Spawn pipes — keep the gap centered in the playable area (above ground).
         // The gap centre stays within a comfortable band and only shifts a little
         // between consecutive pipes, so no pipe is unreachably high or low.
-        if (tick - lastPipe > 88) {
+        if (tick - lastPipe > PIPE_INTERVAL) {
             var half = PIPE_GAP / 2;
             var minCenter = half + 40;                 // keep top pipe >= 40px
             var maxCenter = GROUND_Y - half - 40;      // keep bottom pipe >= 40px above ground
@@ -226,15 +239,17 @@
             if (delta < -maxStep) delta = -maxStep;
             lastGapCenter += delta;
             var top = Math.floor(lastGapCenter - half);
-            // Alternate the two sponsor logos on each pipe
-            pipes.push({ x: canvas.width, top: top, passed: false, logo: pipes.length % logos.length });
+            // Odd pipes (1,3,5...) get the black Momento logo; even pipes get the cream Nezoo logo.
+            pipeCount++;
+            var logoIndex = (pipeCount % 2 === 1) ? 0 : 1;
+            pipes.push({ x: canvas.width, top: top, passed: false, logo: logoIndex });
             lastPipe = tick;
         }
 
         // Move pipes & collisions
         for (var i = pipes.length - 1; i >= 0; i--) {
             var p = pipes[i];
-            p.x -= PIPE_SPEED;
+            p.x -= PIPE_SPEED * f;
 
             if (bird.x + bird.w > p.x && bird.x < p.x + PIPE_WIDTH) {
                 if (bird.y < p.top || bird.y + bird.h > p.top + PIPE_GAP) {
