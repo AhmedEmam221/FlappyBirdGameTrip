@@ -85,8 +85,11 @@
             <button type="button" class="btn btn-secondary w-full" id="close-submit-btn">Close</button>
         </form>
         <div class="mt-5 text-center pt-4" style="border-top:1px solid var(--border);">
-            <p class="text-xs text-muted mb-3">Want to win? Follow our Instagram page.</p>
-            <a id="ig-follow-link" href="/instagram/visit" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Follow Us on Instagram</a>
+            <p class="text-xs text-muted mb-3">Want to win? Follow our instagram pages.</p>
+            <div class="flex flex-col gap-2">
+                <a href="https://www.instagram.com/mome.ntotravel" target="_blank" rel="noopener noreferrer" class="btn btn-secondary w-full">Momento Travel</a>
+                <a href="https://www.instagram.com/nezoo_press" target="_blank" rel="noopener noreferrer" class="btn btn-secondary w-full">Nezoo Press</a>
+            </div>
         </div>
     </div>
 </div>
@@ -445,10 +448,6 @@
                 showMsg(data.message || 'Score submitted! Awaiting verification.', false);
                 submitForm.reset();
                 submitScore.value = String(score);
-                // Keep the tracked redirect link (/instagram/visit) so clicks are recorded.
-                if (sessionUuid) {
-                    igFollowLink.setAttribute('href', '/instagram/visit?session=' + encodeURIComponent(sessionUuid));
-                }
             } else {
                 showMsg(data.error || 'Submission failed. Please try again.', true);
             }
@@ -461,7 +460,6 @@
         xhr.send(fd);
     });
 
-    var igFollowLink = document.getElementById('ig-follow-link');
     function showMsg(text, isError) {
         submitMessage.textContent = text;
         submitMessage.style.color = isError ? '#ef4444' : '#22c55e';

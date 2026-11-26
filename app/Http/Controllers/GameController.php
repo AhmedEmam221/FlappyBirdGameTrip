@@ -120,6 +120,24 @@ class GameController extends Controller
     }
 
     /**
+     * Display the public dashboard (no authentication required).
+     * Shows ALL scores with Instagram usernames and verification status.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function dashboard()
+    {
+        $submissions = ScoreSubmission::with('player')
+            ->orderByDesc('submitted_score')
+            ->orderBy('submitted_at', 'asc')
+            ->get();
+
+        return view('dashboard', [
+            'submissions' => $submissions,
+        ]);
+    }
+
+    /**
      * Show the competition rules.
      *
      * @return \Illuminate\Http\Response
