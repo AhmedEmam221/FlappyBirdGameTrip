@@ -9,11 +9,38 @@
     <header class="text-center mb-8">
         <h1 class="text-3xl md:text-4xl font-extrabold mb-2">Live Dashboard</h1>
         <p class="text-muted">All scores &mdash; approved and pending &mdash; updated live</p>
-        <div class="mt-3 flex items-center justify-center gap-2">
-            <span class="inline-block w-2 h-2 rounded-full" style="background:#16A34A;"></span>
-            <span class="text-sm text-muted">Public view &middot; No login required</span>
-        </div>
     </header>
+
+    <!-- Game status + control -->
+    <div class="card p-5 mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            @if ($gameAvailable)
+                <span class="inline-block w-3 h-3 rounded-full" style="background:#16A34A;"></span>
+                <div>
+                    <div class="font-bold" style="color:#16A34A;">Game Available</div>
+                    <div class="text-xs text-muted">Players can play and submit scores.</div>
+                </div>
+            @else
+                <span class="inline-block w-3 h-3 rounded-full" style="background:#DC2626;"></span>
+                <div>
+                    <div class="font-bold" style="color:#DC2626;">Game Not Available</div>
+                    <div class="text-xs text-muted">The game is closed. No one can play or submit.</div>
+                </div>
+            @endif
+        </div>
+        <form method="POST" action="{{ route('dashboard.toggle-game') }}">
+            @csrf
+            @if ($gameAvailable)
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Close the game? No one will be able to play or submit scores.')">Close Game</button>
+            @else
+                <button type="submit" class="btn btn-primary" onclick="return confirm('Open the game and allow everyone to play again?')">Open Game</button>
+            @endif
+        </form>
+    </div>
+
+    @if (session('status'))
+        <div class="mb-6 px-4 py-3 rounded-lg text-sm" style="background:#DBEAFE;color:#1E40AF;">{{ session('status') }}</div>
+    @endif
 
     <!-- Top 3 -->
     @if ($submissions->count() > 0)
@@ -31,6 +58,7 @@
                         {{ $entry->player->display_name ?? $entry->player->instagram_username }}
                     </div>
                     <div class="text-sm text-muted truncate">{{ '@' . $entry->player->instagram_username }}</div>
+                    <div class="text-xs mt-2"><span class="badge badge-warning">Bus {{ $entry->bus_number ?? '—' }}</span></div>
                     <div class="text-4xl font-extrabold mt-3">{{ $entry->submitted_score }}</div>
                     <div class="text-xs text-muted mt-1">points</div>
                     <div class="mt-2">
@@ -55,6 +83,7 @@
                         <tr style="background:var(--bg);">
                             <th class="py-3 px-5 text-left text-xs font-semibold uppercase tracking-wide text-muted">Rank</th>
                             <th class="py-3 px-5 text-left text-xs font-semibold uppercase tracking-wide text-muted">Instagram Username</th>
+                            <th class="py-3 px-5 text-left text-xs font-semibold uppercase tracking-wide text-muted">Bus No.</th>
                             <th class="py-3 px-5 text-left text-xs font-semibold uppercase tracking-wide text-muted">Status</th>
                             <th class="py-3 px-5 text-right text-xs font-semibold uppercase tracking-wide text-muted">Score</th>
                         </tr>
@@ -74,6 +103,7 @@
                                     {{ '@' . $entry->player->instagram_username }}
                                 </a>
                             </td>
+                            <td class="py-3 px-5"><span class="badge badge-warning">{{ $entry->bus_number ?? '—' }}</span></td>
                             <td class="py-3 px-5">
                                 <span class="badge badge-{{ $entry->verification_status }}">{{ str_replace('_', ' ', ucfirst($entry->verification_status)) }}</span>
                             </td>

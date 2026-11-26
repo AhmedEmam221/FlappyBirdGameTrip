@@ -22,6 +22,15 @@ class SubmissionController extends Controller
      */
     public function store(Request $request)
     {
+        // Block submissions when the event/game is closed
+        if (! (bool) setting('game_available', true)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'The game is currently closed. Submissions are disabled.',
+                'game_available' => false,
+            ], 403);
+        }
+
         // Validate the request (allow optional leading @ and periods in usernames)
         $validated = $request->validate([
             'game_session_id' => 'required|string',

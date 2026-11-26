@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\GameSession;
 use App\Models\Player;
 use App\Models\ScoreSubmission;
+use App\Models\Setting;
 use Illuminate\Support\Str;
 
 class GameController extends Controller
@@ -27,7 +28,9 @@ class GameController extends Controller
      */
     public function play()
     {
-        return view('play');
+        return view('play', [
+            'gameAvailable' => (bool) setting('game_available', true),
+        ]);
     }
 
     /**
@@ -38,6 +41,15 @@ class GameController extends Controller
      */
     public function createSession(Request $request)
     {
+        // Block new sessions when the event/game is closed
+        if (! (bool) setting('game_available', true)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'The game is currently closed. Please check back later.',
+                'game_available' => false,
+            ], 403);
+        }
+
         // Generate a secure, unpredictable token
         $token = Str::random(40);
 
@@ -134,7 +146,23 @@ class GameController extends Controller
 
         return view('dashboard', [
             'submissions' => $submissions,
+            'gameAvailable' => (bool) setting('game_available', true),
         ]);
+    }
+
+    /**
+     * Toggle whether the game is available to play.
+     * Public endpoint for the event operator's dashboard.
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function toggleGame()
+    {
+        $current = (bool) setting('game_available', true);
+        Setting::setValue('game_available', ! $current);
+
+        return redirect()->route('dashboard')
+            ->with('status', $current ? 'Game closed. No one can play or submit now.' : 'Game is now open for everyone.');
     }
 
     /**

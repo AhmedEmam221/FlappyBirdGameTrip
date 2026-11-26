@@ -9,6 +9,11 @@
     <header class="mb-8">
         <h1 class="text-3xl md:text-4xl font-extrabold mb-2">Flappy Challenge</h1>
         <p class="text-muted">Achieve the highest score.</p>
+        @unless ($gameAvailable)
+        <div class="mt-4 inline-block px-4 py-2 rounded-lg" style="background:#FEE2E2;color:#991B1B;font-weight:600;">
+            The game is currently closed. Please check back later.
+        </div>
+        @endunless
     </header>
 
     <!-- Game wrapper (game sits directly under the title) -->
@@ -24,9 +29,14 @@
             <!-- Start screen -->
             <div id="start-screen" class="overlay-screen">
                 <div class="overlay-box">
+                    @if ($gameAvailable)
                     <h2 class="text-2xl font-bold mb-2">Ready?</h2>
                     <p class="text-muted mb-5 text-sm">Tap, click, or press Space to flap.</p>
                     <button id="start-btn" class="btn btn-primary">Start Game</button>
+                    @else
+                    <h2 class="text-2xl font-bold mb-2">Game Closed</h2>
+                    <p class="text-muted mb-2 text-sm">This event has ended. Play is not available right now.</p>
+                    @endif
                 </div>
             </div>
 
@@ -119,6 +129,7 @@
     var GRAVITY = 0.55, FLAP = -10.5, PIPE_SPEED = 3.2, PIPE_GAP = 180, PIPE_WIDTH = 64;
     var PIPE_INTERVAL = 78; // frames @60fps between pipes (time-based via tick)
     var GROUND_Y = 490;
+    var GAME_AVAILABLE = {{ $gameAvailable ? 'true' : 'false' }};
 
     // ---- DOM ----
     var canvas = document.getElementById('game-canvas');
@@ -169,16 +180,18 @@
         xhr.open('GET', '/game-session/create', true);
         xhr.setRequestHeader('Accept', 'application/json');
         xhr.onload = function () {
+            var ok = true;
             try {
                 var data = JSON.parse(xhr.responseText);
+                if (data.success === false || xhr.status >= 400) ok = false;
                 sessionUuid = data.session_uuid || '';
                 sessionToken = data.secure_token || '';
             } catch (e) {
                 sessionUuid = ''; sessionToken = '';
             }
-            callback();
+            callback(ok);
         };
-        xhr.onerror = function () { callback(); };
+        xhr.onerror = function () { callback(true); };
         xhr.send();
     }
 
@@ -194,8 +207,10 @@
     }
 
     function start() {
+        if (! GAME_AVAILABLE) return;
         reset();
-        createSession(function () {
+        createSession(function (ok) {
+            if (ok === false) return; // session blocked (game closed server-side)
             startScreen.style.display = 'none';
             overScreen.style.display = 'none';
             running = true;
@@ -406,7 +421,7 @@
     canvas.addEventListener('mousedown', onInput, { passive: false });
     canvas.addEventListener('touchstart', onInput, { passive: false });
 
-    startBtn.addEventListener('click', start);
+    if (startBtn) startBtn.addEventListener('click', start);
     playAgainBtn.addEventListener('click', start);
     openSubmitBtn.addEventListener('click', openSubmit);
     closeSubmitBtn.addEventListener('click', closeSubmit);

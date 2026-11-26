@@ -24,6 +24,7 @@ Route::post('/game-session', [GameController::class, 'storeSession'])->name('gam
 Route::post('/score/submit', [SubmissionController::class, 'store'])->name('score.submit');
 Route::get('/leaderboard', [GameController::class, 'leaderboard'])->name('leaderboard');
 Route::get('/dashboard', [GameController::class, 'dashboard'])->name('dashboard');
+Route::post('/dashboard/toggle-game', [GameController::class, 'toggleGame'])->name('dashboard.toggle-game');
 Route::get('/rules', [GameController::class, 'rules'])->name('rules');
 Route::get('/privacy', [GameController::class, 'privacy'])->name('privacy');
 Route::get('/instagram/visit', [GameController::class, 'instagramVisit'])->name('instagram.visit');

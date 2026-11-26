@@ -34,6 +34,7 @@ class SettingController extends Controller
             'prize_third' => 'Third Place Prize',
             'tie_breaker' => 'earliest_submission',
             'allow_new_submissions' => 'true',
+            'game_available' => '1',
             'contact_information' => '',
             'competition_rules' => '',
         ];
